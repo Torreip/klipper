@@ -159,6 +159,22 @@ enable_clock_stm32f40x(void)
                     | (0 << RCC_PLLCFGR_PLLP_Pos)
                     | ((pll_freq/FREQ_USB) << RCC_PLLCFGR_PLLQ_Pos));
     RCC->CR |= RCC_CR_PLLON;
+#elif CONFIG_MACH_STM32F401
+    uint32_t pll_base = 2000000, pll_freq = CONFIG_CLOCK_FREQ * 2, pllcfgr;
+    if (!CONFIG_STM32_CLOCK_REF_INTERNAL) {
+        // Configure 84Mhz PLL from external crystal (HSE)
+        uint32_t div = CONFIG_CLOCK_REF_FREQ / pll_base;
+        RCC->CR |= RCC_CR_HSEON;
+        pllcfgr = RCC_PLLCFGR_PLLSRC_HSE | (div << RCC_PLLCFGR_PLLM_Pos);
+    } else {
+        // Configure 84Mhz PLL from internal 16Mhz oscillator (HSI)
+        uint32_t div = 16000000 / pll_base;
+        pllcfgr = RCC_PLLCFGR_PLLSRC_HSI | (div << RCC_PLLCFGR_PLLM_Pos);
+    }
+    RCC->PLLCFGR = (pllcfgr | ((pll_freq/pll_base) << RCC_PLLCFGR_PLLN_Pos)
+                    | (0 << RCC_PLLCFGR_PLLP_Pos)
+                    | ((pll_freq/FREQ_USB) << RCC_PLLCFGR_PLLQ_Pos));
+    RCC->CR |= RCC_CR_PLLON;
 #endif
 }
 
